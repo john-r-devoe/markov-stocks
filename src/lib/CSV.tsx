@@ -12,6 +12,5 @@ export function parseCsv(csv:string) : Array<{date:string, value:number}>|Error 
     if(data.length < 1) {
         throw new Error;
     }
-    console.log(data);
     return data;
 }

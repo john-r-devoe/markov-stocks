@@ -1,7 +1,7 @@
 "use client"
 
 import Alert from "@/components/Alert";
-import { parseCsv } from "@/lib/CSV";
+import { parseCsv, toCsv } from "@/lib/CSV";
 import { predict } from "@/lib/Markov";
 import { FormEvent, useEffect, useState } from "react";
 import {
@@ -15,6 +15,8 @@ import {
   Legend,
 } from 'chart.js';
 import { Line } from 'react-chartjs-2';
+import { saveAs } from "file-saver";
+import Modal from "@/components/Modal";
 
 ChartJS.register(
   CategoryScale,
@@ -131,6 +133,10 @@ export default function Home() {
       setFormattedHistoricalData(historicalData);
 
       let futureData = predict(historicalData, formParams.tolerance, formParams.months);
+      if(futureData instanceof Error){
+        throw futureData;
+      }
+      setFormattedFutureData(futureData);
       setLoading(false);
     }
     catch(error)
@@ -138,6 +144,21 @@ export default function Home() {
       setAlert({show: true, type:"danger", strong:"Something went wrong uploading your file...", message:"Try again and make sure you are using nasdaq historical data CSV files!", onClose: () => setAlert(undefined)});
       console.error(error);
       setLoading(false);
+    }
+  }
+
+  const downloadPredictedCSV = async () => {
+    try
+    {
+      const stringToSave = toCsv(formattedFutureData ?? []);
+      if(stringToSave instanceof Error){throw stringToSave;}
+      var blob = new Blob([stringToSave], {type: 'text/csv;charset=utf-8'});
+      saveAs(blob, "PredictedData.csv");
+    }
+    catch(error)
+    {
+      setAlert({show: true, type:"danger", strong:"Something went wrong downloading your file...", message:"Try again and check the console for more details!", onClose: () => setAlert(undefined)});
+      console.error(error); 
     }
   }
 
@@ -154,7 +175,7 @@ export default function Home() {
           </div>
           <div className="mb-3">
             <label htmlFor="toleranceInput" className="form-label">Markov State Tolerance</label>
-            <input type="range" className="form-range" id="toleranceInput" min="0" max="5" step="0.01" aria-describedby="toleranceHelp" value={formParams.tolerance} onChange={(e) => setFormParams((prevValue) => ({...prevValue, tolerance:parseFloat(e.target.value)}))}/>
+            <input type="range" className="form-range" id="toleranceInput" min="0.01" max="5" step="0.01" aria-describedby="toleranceHelp" value={formParams.tolerance} onChange={(e) => setFormParams((prevValue) => ({...prevValue, tolerance:parseFloat(e.target.value)}))}/>
             <div id="toleranceHelp" className="form-text">{formParams.tolerance}</div>
           </div>
           <div className="mb-3">
@@ -173,18 +194,31 @@ export default function Home() {
         </form>
         {alert ? <Alert type={alert.type} strong={alert.strong} message={alert.message} onClose={alert.onClose} /> : ""}
       </div>
-      <div className="row mt-5 px-5">
+      <div className="row my-5 px-5">
         <div className="col d-flex flex-column align-items-center px-5">
           <h2>Historical</h2>
           <Line data={chartDataParams[0] ?? emptyParams} options={chartOptions}/>
         </div>
       </div>
-      <div className="row mt-5 px-5">
+      <div className="row my-5 px-5">
         <div className="col d-flex flex-column align-items-center px-5">
           <h2>Prediction</h2>
-          <Line data={chartDataParams[1] ?? emptyParams} options={chartOptions}/>
+          <Line data={chartDataParams[1] ?? emptyParams} options={chartOptions}/>        
         </div>
       </div>
+      { formattedFutureData ?
+      <div className="row">
+        <div className="col d-flex flex-column align-items-center px-5 gap-3 mb-5">
+        <button type="button" className="btn btn-primary" onClick={downloadPredictedCSV}>Download CSV</button>
+        <button type="button" className="btn btn-warning" data-bs-toggle="modal" data-bs-target="#modal">
+              Comparison Tool
+        </button>
+        </div>
+      </div>
+      : ""
+      }
+      
+      <Modal modalId="modal" predictedData={formattedFutureData ?? []}/>
     </main>
   );
 }

@@ -57,49 +57,52 @@ export default function Modal({modalId, predictedData}:{modalId:string, predicte
                         <button type="button" className="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                     </div>
                     <div className="modal-body">
-                    {!tableView ?
-                        (<form onSubmit={(e) => handleSubmit(e)} className="mb-5">
-                            <div className="mb-3">
-                                <label htmlFor="fileUploadInput" className="form-label">Upload Actual CSV Stock Data for Predicted Period</label>
-                                <input type="file" accept=".csv" className="form-control" id="fileUploadInput" onChange={(e) => setCsv(e.target.files?.[0])}/>
-                            </div>
-                            <div className="d-flex align-items-center">
-                                <button type="submit" className="btn btn-primary me-5">Submit</button>
-                                {loading ? 
-                                <div className="spinner-border text-primary" role="status">
-                                    <span className="visually-hidden">Loading...</span>
+                        {!tableView ?
+                            (<form onSubmit={(e) => handleSubmit(e)} className="mb-5">
+                                <div className="mb-3">
+                                    <label htmlFor="fileUploadInput" className="form-label">Upload Actual CSV Stock Data for Predicted Period</label>
+                                    <input type="file" accept=".csv" className="form-control" id="fileUploadInput" onChange={(e) => setCsv(e.target.files?.[0])}/>
                                 </div>
-                                :
-                                ""}
-                            </div>
-                        </form>)
-                    :
-                    (<table className="table">
-                        <thead>
-                            <tr>
-                                <th scope="col">Date</th>
-                                <th scope="col">Real Value</th>
-                                <th scope="col">Predicted Value</th>
-                                <th scope="col">Error</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {
-                                tableItems.map((item) => (
-                                    <tr key={item.index}>
-                                        <th scope="row">{item.date}</th>
-                                        <td>{item.realValue}</td>
-                                        <td>{item.predictedValue}</td>
-                                        <td>{item.difference}</td>
+                                <div className="d-flex align-items-center">
+                                    <button type="submit" className="btn btn-primary me-5">Submit</button>
+                                    {loading ? 
+                                    <div className="spinner-border text-primary" role="status">
+                                        <span className="visually-hidden">Loading...</span>
+                                    </div>
+                                    :
+                                    ""}
+                                </div>
+                            </form>)
+                        :
+                        (<div>
+                            <table className="table">
+                                <thead>
+                                    <tr>
+                                        <th scope="col">Date</th>
+                                        <th scope="col">Real Value</th>
+                                        <th scope="col">Predicted Value</th>
+                                        <th scope="col">Error</th>
                                     </tr>
-                                ))
-                            }
-                        </tbody>
-                    </table>)
-                    }
+                                </thead>
+                                <tbody>
+                                    {
+                                        tableItems.map((item) => (
+                                            <tr key={item.index}>
+                                                <th scope="row">{item.date}</th>
+                                                <td>{item.realValue}</td>
+                                                <td>{item.predictedValue}</td>
+                                                <td>{item.difference}</td>
+                                            </tr>
+                                        ))
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                        )}
                     </div>
                     <div className="modal-footer">
                         {alert ? <Alert type={alert.type} strong={alert.strong} message={alert.message} onClose={alert.onClose} /> : ""}
+                        <p className="mx-5">Average Error: {(errorValues.count / errorValues.total).toFixed(2)}</p>
                         <button type="button" id="closeModal" className="btn btn-secondary" data-bs-dismiss="modal">Close</button>
                         <button type="button" id="discardChanges" className="btn btn-warning" data-bs-dismiss="modal" onClick={() => {
                             setCsv(undefined);

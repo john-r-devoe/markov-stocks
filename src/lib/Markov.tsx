@@ -1,5 +1,3 @@
-
-
 export function predict(data:Array<{date:string, value:number}>, tolerance:number, months:number) : Array<{date:string, value:number}> | Error {
     let countStates:Array<{from:number, to:number, count:number, weight?:number}> = [];
     const getState = (slope:number):number|Error => {

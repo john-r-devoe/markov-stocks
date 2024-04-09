@@ -40,7 +40,7 @@ export default function Modal({modalId, predictedData}:{modalId:string, predicte
                 setTableItems( prev => [...prev, {index: index, date:item.date, realValue: item.value, predictedValue: predictedDataValue, difference: matchingDates ? parseFloat((predictedDataValue - item.value).toFixed(2)) : undefined}])
                 console.log(tableItems);
                 if(matchingDates){
-                    setErrorValues((prev) => ({count: prev.count + 1, total: prev.total + predictedDataValue - item.value}))
+                    setErrorValues((prev) => ({count: prev.count + 1, total: prev.total + Math.abs(predictedDataValue - item.value)}))
                 }  
             })
             setLoading(false);
@@ -89,8 +89,8 @@ export default function Modal({modalId, predictedData}:{modalId:string, predicte
                                     <tr key={item.index}>
                                         <th scope="row">{item.date}</th>
                                         <td>{item.realValue}</td>
-                                        <td>{item.predictedValue}</td>
-                                        <td>{item.difference}</td>
+                                        <td>{item.predictedValue?.toFixed(2)}</td>
+                                        <td>{item.difference?.toFixed(2)}</td>
                                     </tr>
                                 ))
                             }
@@ -100,7 +100,8 @@ export default function Modal({modalId, predictedData}:{modalId:string, predicte
                     </div>
                     <div className="modal-footer">
                         {alert ? <Alert type={alert.type} strong={alert.strong} message={alert.message} onClose={alert.onClose} /> : ""}
-                        <button type="button" id="closeModal" className="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                        <p className="mx-5">Average Error: {(errorValues.total / errorValues.count).toFixed(2)}</p>
+                        <button type="button" id="closeModal" className="btn btn-secondary ml-5" data-bs-dismiss="modal">Close</button>
                         <button type="button" id="discardChanges" className="btn btn-warning" data-bs-dismiss="modal" onClick={() => {
                             setCsv(undefined);
                             setFormattedRealData(undefined);

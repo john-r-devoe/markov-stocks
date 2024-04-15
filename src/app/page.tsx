@@ -17,6 +17,7 @@ import {
 import { Line } from 'react-chartjs-2';
 import { saveAs } from "file-saver";
 import Modal from "@/components/Modal";
+import Link from "next/link";
 
 ChartJS.register(
   CategoryScale,
@@ -166,6 +167,7 @@ export default function Home() {
     <main>
       <div className="row mb-3 mt-3 text-center">
         <h2>Markov Stock Predictor</h2>
+        <p>Find Historical Data <Link href="https://www.nasdaq.com/market-activity/quotes/historical" target="_blank">here!</Link></p>
       </div>
       <div className="px-5">
         <form onSubmit={(e) => handleSubmit(e)} className="mb-5">

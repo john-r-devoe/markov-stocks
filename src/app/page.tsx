@@ -168,6 +168,7 @@ export default function Home() {
       <div className="row mb-3 mt-3 text-center">
         <h2>Markov Stock Predictor</h2>
         <p>Find Historical Data <Link href="https://www.nasdaq.com/market-activity/quotes/historical" target="_blank">here!</Link></p>
+        <p>Hit <i>F12</i> and look at the console to see the generated Markov Chain and corresponding States</p>
       </div>
       <div className="px-5">
         <form onSubmit={(e) => handleSubmit(e)} className="mb-5">

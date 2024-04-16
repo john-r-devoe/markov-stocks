@@ -106,6 +106,7 @@ export default function Modal({modalId, predictedData}:{modalId:string, predicte
                             setCsv(undefined);
                             setFormattedRealData(undefined);
                             setErrorValues({count:0, total:0});
+                            setTableItems([]);
                             setTableView(false);
                         }}>
                             Close and Discard

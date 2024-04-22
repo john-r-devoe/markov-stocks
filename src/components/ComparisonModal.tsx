@@ -4,7 +4,7 @@ import { parseCsv } from "@/lib/CSV";
 import { FormEvent, useEffect, useState } from "react";
 import Alert from "./Alert";
 
-export default function Modal({modalId, predictedData}:{modalId:string, predictedData:Array<{date:string, value:number}>}){
+export default function ComparisonModal({modalId, predictedData}:{modalId:string, predictedData:Array<{date:string, value:number}>}){
     const [csv, setCsv] = useState<File|undefined>();
     const [formattedRealData, setFormattedRealData] = useState<Array<{date:string, value:number}>|undefined>(undefined);
     const [errorValues, setErrorValues] = useState<{count:number, total:number}>({count:0, total:0});

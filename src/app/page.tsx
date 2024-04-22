@@ -16,7 +16,7 @@ import {
 } from 'chart.js';
 import { Line } from 'react-chartjs-2';
 import { saveAs } from "file-saver";
-import Modal from "@/components/Modal";
+import ComparisonModal from "@/components/ComparisonModal";
 import Link from "next/link";
 
 ChartJS.register(
@@ -175,11 +175,15 @@ export default function Home() {
           <div className="mb-3">
             <label htmlFor="fileUploadInput" className="form-label">Upload CSV Stock Data</label>
             <input type="file" accept=".csv" className="form-control" id="fileUploadInput" onChange={(e) => setFormParams((prevValue) => ({...prevValue, csv: e.target.files?.[0]}))}/>
+            
           </div>
           <div className="mb-3">
             <label htmlFor="toleranceInput" className="form-label">Markov State Tolerance</label>
             <input type="range" className="form-range" id="toleranceInput" min="0.01" max="5" step="0.01" aria-describedby="toleranceHelp" value={formParams.tolerance} onChange={(e) => setFormParams((prevValue) => ({...prevValue, tolerance:parseFloat(e.target.value)}))}/>
             <div id="toleranceHelp" className="form-text">{formParams.tolerance}</div>
+            <button type="button" className="btn btn-warning mt-2" data-bs-toggle="modal" data-bs-target="#ToleranceModal">
+              Auto Tolerance
+            </button>
           </div>
           <div className="mb-3">
             <label htmlFor="monthsInput" className="form-label">Future Prediction Number of Months</label>
@@ -213,7 +217,7 @@ export default function Home() {
       <div className="row">
         <div className="col d-flex flex-column align-items-center px-5 gap-3 mb-5">
         <button type="button" className="btn btn-primary" onClick={downloadPredictedCSV}>Download CSV</button>
-        <button type="button" className="btn btn-warning" data-bs-toggle="modal" data-bs-target="#modal">
+        <button type="button" className="btn btn-warning" data-bs-toggle="modal" data-bs-target="#ComparisonModal">
               Comparison Tool
         </button>
         </div>
@@ -221,7 +225,7 @@ export default function Home() {
       : ""
       }
       
-      <Modal modalId="modal" predictedData={formattedFutureData ?? []}/>
+      <ComparisonModal modalId="ComparisonModal" predictedData={formattedFutureData ?? []}/>
     </main>
   );
 }

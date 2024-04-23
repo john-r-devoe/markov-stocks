@@ -18,6 +18,7 @@ import { Line } from 'react-chartjs-2';
 import { saveAs } from "file-saver";
 import ComparisonModal from "@/components/ComparisonModal";
 import Link from "next/link";
+import ToleranceModal from "@/components/ToleranceModal";
 
 ChartJS.register(
   CategoryScale,
@@ -163,6 +164,30 @@ export default function Home() {
     }
   }
 
+  const handleAutoTolerance = async () => {
+    setLoading(true);
+    if (formParams.csv == undefined){
+      setAlert({show: true, type:"danger", strong:"Make sure to upload data...", message:"The Auto Tolerance does not work without data!", onClose: () => setAlert(undefined)});
+      setLoading(false);
+      return;
+    }
+    try
+    {
+      let parsedFile:string|undefined = await formParams.csv?.text();
+      let historicalData = parseCsv(parsedFile ?? "");
+      if(historicalData instanceof Error){
+        throw historicalData;
+      }
+      setFormattedHistoricalData(historicalData);
+      setLoading(false);
+    }
+    catch(error){
+      setAlert({show: true, type:"danger", strong:"Something went wrong uploading your file...", message:"Try again and make sure you are using nasdaq historical data CSV files!", onClose: () => setAlert(undefined)});
+      console.error(error);
+      setLoading(false);
+    }
+  }
+
   return (
     <main>
       <div className="row mb-1 mt-2 text-center">
@@ -181,9 +206,16 @@ export default function Home() {
             <label htmlFor="toleranceInput" className="form-label">Markov State Tolerance</label>
             <input type="range" className="form-range" id="toleranceInput" min="0.01" max="5" step="0.01" aria-describedby="toleranceHelp" value={formParams.tolerance} onChange={(e) => setFormParams((prevValue) => ({...prevValue, tolerance:parseFloat(e.target.value)}))}/>
             <div id="toleranceHelp" className="form-text">{formParams.tolerance}</div>
-            <button type="button" className="btn btn-warning mt-2" data-bs-toggle="modal" data-bs-target="#ToleranceModal">
+            {formParams.csv != undefined ? 
+            (
+              <button type="button" className="btn btn-warning mt-2" data-bs-toggle="modal" data-bs-target="#ToleranceModal" onClick={handleAutoTolerance}>
               Auto Tolerance
-            </button>
+              </button>
+            ) :
+            (
+              ""
+            )
+          }
           </div>
           <div className="mb-3">
             <label htmlFor="monthsInput" className="form-label">Future Prediction Number of Months</label>
@@ -226,6 +258,7 @@ export default function Home() {
       }
       
       <ComparisonModal modalId="ComparisonModal" predictedData={formattedFutureData ?? []}/>
+      <ToleranceModal modalId="ToleranceModal" historicalData={formattedHistoricalData ?? []} />
     </main>
   );
 }

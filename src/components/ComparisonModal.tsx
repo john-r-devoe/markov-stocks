@@ -15,6 +15,7 @@ export default function ComparisonModal({modalId, predictedData}:{modalId:string
 
     const handleSubmit = async (e:FormEvent<HTMLFormElement>) => {
         e.preventDefault();
+        setLoading(true);
         try
         {
           let parsedFile:string|undefined = await csv?.text();
@@ -23,12 +24,13 @@ export default function ComparisonModal({modalId, predictedData}:{modalId:string
             throw realData;
           }
           setFormattedRealData(realData);
-          setLoading(true);
+          setLoading(false)
         }
         catch(error)
         {
             setAlert({show: true, type:"danger", strong:"Something went wrong uploading your file...", message:"Try again and make sure you are using nasdaq historical data CSV files!", onClose: () => setAlert(undefined)});
             console.error(error);
+            setLoading(false);
         }
     }
 

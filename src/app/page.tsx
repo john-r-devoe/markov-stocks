@@ -48,6 +48,7 @@ export default function Home() {
   const [chartDataParams, setChartDataParams] = useState<Array<chartParams>>([]);
   const [loading, setLoading] = useState<boolean>(false);
   const [alert, setAlert] = useState<{show:boolean, type:string, strong:string, message:string, onClose: () => any}|undefined>(undefined);
+  const [simulatedTolerance, setSimulatedTolerance] = useState<number|undefined>();
   const emptyParams:chartParams = 
   {
     labels : [],
@@ -205,17 +206,28 @@ export default function Home() {
           <div className="mb-3">
             <label htmlFor="toleranceInput" className="form-label">Markov State Tolerance</label>
             <input type="range" className="form-range" id="toleranceInput" min="0.01" max="5" step="0.01" aria-describedby="toleranceHelp" value={formParams.tolerance} onChange={(e) => setFormParams((prevValue) => ({...prevValue, tolerance:parseFloat(e.target.value)}))}/>
-            <div id="toleranceHelp" className="form-text">{formParams.tolerance}</div>
+            <div id="toleranceHelp" className="form-text">{formParams.tolerance == simulatedTolerance && formParams.csv != undefined ? (<strong>{formParams.tolerance}</strong>) : (<p>{formParams.tolerance}</p>)}</div>
             {formParams.csv != undefined ? 
-            (
-              <button type="button" className="btn btn-warning mt-2" data-bs-toggle="modal" data-bs-target="#ToleranceModal" onClick={handleAutoTolerance}>
-              Auto Tolerance
-              </button>
-            ) :
-            (
-              ""
-            )
-          }
+              (
+                <button type="button" className="btn btn-warning mt-2" data-bs-toggle="modal" data-bs-target="#ToleranceModal" onClick={handleAutoTolerance}>
+                Auto Tolerance
+                </button>
+              ) :
+              (
+                ""
+              )
+            }
+            {simulatedTolerance != undefined && formParams.csv != undefined ?
+              (
+                <button type="button" className="btn btn-success mt-2 mx-5" onClick={() => setFormParams((prevValue) => ({...prevValue, tolerance:simulatedTolerance}))}>
+                  Jump to Calculated Tolerance
+                </button>
+              ) :
+              (
+                ""
+              )
+
+            }
           </div>
           <div className="mb-3">
             <label htmlFor="monthsInput" className="form-label">Future Prediction Number of Months</label>
@@ -258,7 +270,10 @@ export default function Home() {
       }
       
       <ComparisonModal modalId="ComparisonModal" predictedData={formattedFutureData ?? []}/>
-      <ToleranceModal modalId="ToleranceModal" historicalData={formattedHistoricalData ?? []} />
+      <ToleranceModal modalId="ToleranceModal" historicalData={formattedHistoricalData ?? []} callback={(num) => {
+        setFormParams((prevValue) => ({...prevValue, tolerance:num}));
+        setSimulatedTolerance(num);
+      }} />
     </main>
   );
 }

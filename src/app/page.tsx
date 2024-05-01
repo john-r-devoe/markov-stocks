@@ -207,19 +207,9 @@ export default function Home() {
             <label htmlFor="toleranceInput" className="form-label">Markov State Tolerance</label>
             <input type="range" className="form-range" id="toleranceInput" min="0.01" max="5" step="0.01" aria-describedby="toleranceHelp" value={formParams.tolerance} onChange={(e) => setFormParams((prevValue) => ({...prevValue, tolerance:parseFloat(e.target.value)}))}/>
             <div id="toleranceHelp" className="form-text">{formParams.tolerance == simulatedTolerance && formParams.csv != undefined ? (<strong>{formParams.tolerance}</strong>) : (<p>{formParams.tolerance}</p>)}</div>
-            {formParams.csv != undefined ? 
-              (
-                <button type="button" className="btn btn-warning mt-2" data-bs-toggle="modal" data-bs-target="#ToleranceModal" onClick={handleAutoTolerance}>
-                Auto Tolerance
-                </button>
-              ) :
-              (
-                ""
-              )
-            }
             {simulatedTolerance != undefined && formParams.csv != undefined ?
               (
-                <button type="button" className="btn btn-success mt-2 mx-5" onClick={() => setFormParams((prevValue) => ({...prevValue, tolerance:simulatedTolerance}))}>
+                <button type="button" className="btn btn-success mt-2" onClick={() => setFormParams((prevValue) => ({...prevValue, tolerance:simulatedTolerance}))}>
                   Jump to Calculated Tolerance
                 </button>
               ) :
@@ -235,7 +225,17 @@ export default function Home() {
             <div id="monthsHelp" className="form-text">{formParams.months}</div>
           </div>
           <div className="d-flex align-items-center">
-            <button type="submit" className="btn btn-primary me-5">Submit</button>
+          {formParams.csv != undefined ? 
+              (
+                <button type="button" className="btn btn-warning" data-bs-toggle="modal" data-bs-target="#ToleranceModal" onClick={handleAutoTolerance}>
+                Auto Tolerance
+                </button>
+              ) :
+              (
+                ""
+              )
+            }
+            <button type="submit" className="btn btn-primary me-5 mx-4">Submit</button>
             {loading?
             <div className="spinner-border text-primary" role="status">
               <span className="visually-hidden">Loading...</span>
@@ -270,7 +270,7 @@ export default function Home() {
       }
       
       <ComparisonModal modalId="ComparisonModal" predictedData={formattedFutureData ?? []}/>
-      <ToleranceModal modalId="ToleranceModal" historicalData={formattedHistoricalData ?? []} callback={(num) => {
+      <ToleranceModal modalId="ToleranceModal" historicalData={formattedHistoricalData ?? []} months={formParams.months} callback={(num) => {
         setFormParams((prevValue) => ({...prevValue, tolerance:num}));
         setSimulatedTolerance(num);
       }} />

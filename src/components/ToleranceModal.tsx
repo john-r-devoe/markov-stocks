@@ -3,15 +3,51 @@
 import { parseCsv } from "@/lib/CSV";
 import { FormEvent, useState } from "react"
 import Alert from "./Alert";
+import { predict } from "@/lib/Markov";
 
-export default function ToleranceModal({modalId, historicalData, callback}:{modalId:string, historicalData:Array<{date:string, value:number}>, callback: (tolerance:number) => any}){
+export default function ToleranceModal({modalId, historicalData, months, callback}:{modalId:string, historicalData:Array<{date:string, value:number}>, months:number, callback: (tolerance:number) => any}){
     const [loading, setLoading] = useState<boolean>();
     const [csv, setCsv] = useState<File|undefined>();
     const [formattedRealData, setFormattedRealData] = useState<Array<{date:string, value:number}>|undefined>(undefined);
     const [alert, setAlert] = useState<{show:boolean, type:string, strong:string, message:string, onClose: () => any}|undefined>(undefined);
+    const [minError, setMinError] = useState<{tolerance:string, error:number}>();
 
     const runSimulation = async (historicalData:Array<{date:string, value:number}>, realData:Array<{date:string, value:number}>, depth:number) : Promise<number> => {
-        return 2;
+        //loop through every possible tolerance level
+        let currentTolerance = 0.01;
+        let toleranceErrors : Array<{tolerance:string, error:number}> = []
+        while(currentTolerance <= 5){
+            currentTolerance = parseFloat(currentTolerance.toFixed(2));
+            toleranceErrors.push({tolerance:currentTolerance.toString(), error: -999});
+            //at tolerance level, loop through 100 times
+            let sum = 0;
+            let count = 0;
+            for(let i = 0; i < depth; i++){
+                //run simulation, get error, computer average error for this tolerance level
+                const data = predict(historicalData, currentTolerance, months);
+                if(data instanceof Error){
+                    throw data;
+                }
+                realData.forEach((value) => {
+                    let dataNum = data.find((val) => val.date == value.date)?.value ?? new Error("No matching date in predicted data. Make sure the months slider at least goes to your real data!");
+                    if(dataNum instanceof Error){throw dataNum;}
+                    sum += Math.abs(dataNum - value.value)
+                    count += 1;
+                });
+            }
+            toleranceErrors[toleranceErrors.findIndex((val) => val.tolerance == currentTolerance.toString())].error = parseFloat((sum / count).toFixed(2));
+            currentTolerance += 0.01;
+        }
+        //find lowest error, return that tolerance level
+        let min = toleranceErrors[0].error;
+        toleranceErrors.forEach((val) => {
+            if(val.error < min){
+                min = val.error;
+            }
+        });
+        let minError = toleranceErrors[toleranceErrors.findIndex((val) => val.error == min)];
+        setMinError(minError);
+        return parseFloat(minError.tolerance);
     }
 
     const handleSubmit = async (e:FormEvent<HTMLFormElement>) => {
@@ -25,7 +61,7 @@ export default function ToleranceModal({modalId, historicalData, callback}:{moda
             throw realData;
           }
           setFormattedRealData(realData);
-          let tolerance = await runSimulation(historicalData, realData, 100);
+          let tolerance = await runSimulation(historicalData, realData, 50);
           callback(tolerance);
           setLoading(false);
         }
@@ -64,7 +100,11 @@ export default function ToleranceModal({modalId, historicalData, callback}:{moda
                             </form>
                         ) :
                         (
-                            <h5>Success! Click <i>Close</i> to continue</h5>
+                            <div>
+                                <h5>Success! Click <i>Close</i> to continue</h5>
+                                <p>Tolerance: {minError?.tolerance}</p>
+                                <p>Error: {minError?.error}</p>
+                            </div>
                         )
                     }
                     

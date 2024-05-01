@@ -1,7 +1,7 @@
 "use client"
 
 import { parseCsv } from "@/lib/CSV";
-import { FormEvent, useState } from "react"
+import { FormEvent, useEffect, useState } from "react"
 import Alert from "./Alert";
 import { predict } from "@/lib/Markov";
 
@@ -11,6 +11,12 @@ export default function ToleranceModal({modalId, historicalData, months, callbac
     const [formattedRealData, setFormattedRealData] = useState<Array<{date:string, value:number}>|undefined>(undefined);
     const [alert, setAlert] = useState<{show:boolean, type:string, strong:string, message:string, onClose: () => any}|undefined>(undefined);
     const [minError, setMinError] = useState<{tolerance:string, error:number}>();
+
+    useEffect(() => {
+        setCsv(undefined);
+        setFormattedRealData(undefined);
+        setMinError(undefined);
+    }, [historicalData])
 
     const runSimulation = async (historicalData:Array<{date:string, value:number}>, realData:Array<{date:string, value:number}>, depth:number) : Promise<number> => {
         //loop through every possible tolerance level

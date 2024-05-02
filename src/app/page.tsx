@@ -16,8 +16,9 @@ import {
 } from 'chart.js';
 import { Line } from 'react-chartjs-2';
 import { saveAs } from "file-saver";
-import Modal from "@/components/Modal";
+import ComparisonModal from "@/components/ComparisonModal";
 import Link from "next/link";
+import ToleranceModal from "@/components/ToleranceModal";
 
 ChartJS.register(
   CategoryScale,
@@ -47,6 +48,7 @@ export default function Home() {
   const [chartDataParams, setChartDataParams] = useState<Array<chartParams>>([]);
   const [loading, setLoading] = useState<boolean>(false);
   const [alert, setAlert] = useState<{show:boolean, type:string, strong:string, message:string, onClose: () => any}|undefined>(undefined);
+  const [simulatedTolerance, setSimulatedTolerance] = useState<number|undefined>();
   const emptyParams:chartParams = 
   {
     labels : [],
@@ -163,6 +165,30 @@ export default function Home() {
     }
   }
 
+  const handleAutoTolerance = async () => {
+    setLoading(true);
+    if (formParams.csv == undefined){
+      setAlert({show: true, type:"danger", strong:"Make sure to upload data...", message:"The Auto Tolerance does not work without data!", onClose: () => setAlert(undefined)});
+      setLoading(false);
+      return;
+    }
+    try
+    {
+      let parsedFile:string|undefined = await formParams.csv?.text();
+      let historicalData = parseCsv(parsedFile ?? "");
+      if(historicalData instanceof Error){
+        throw historicalData;
+      }
+      setFormattedHistoricalData(historicalData);
+      setLoading(false);
+    }
+    catch(error){
+      setAlert({show: true, type:"danger", strong:"Something went wrong uploading your file...", message:"Try again and make sure you are using nasdaq historical data CSV files!", onClose: () => setAlert(undefined)});
+      console.error(error);
+      setLoading(false);
+    }
+  }
+
   return (
     <main>
       <div className="row mb-1 mt-2 text-center">
@@ -175,11 +201,23 @@ export default function Home() {
           <div className="mb-3">
             <label htmlFor="fileUploadInput" className="form-label">Upload CSV Stock Data</label>
             <input type="file" accept=".csv" className="form-control" id="fileUploadInput" onChange={(e) => setFormParams((prevValue) => ({...prevValue, csv: e.target.files?.[0]}))}/>
+            
           </div>
           <div className="mb-3">
             <label htmlFor="toleranceInput" className="form-label">Markov State Tolerance</label>
             <input type="range" className="form-range" id="toleranceInput" min="0.01" max="5" step="0.01" aria-describedby="toleranceHelp" value={formParams.tolerance} onChange={(e) => setFormParams((prevValue) => ({...prevValue, tolerance:parseFloat(e.target.value)}))}/>
-            <div id="toleranceHelp" className="form-text">{formParams.tolerance}</div>
+            <div id="toleranceHelp" className="form-text">{formParams.tolerance == simulatedTolerance && formParams.csv != undefined ? (<strong>{formParams.tolerance}</strong>) : (<p>{formParams.tolerance}</p>)}</div>
+            {simulatedTolerance != undefined && formParams.csv != undefined ?
+              (
+                <button type="button" className="btn btn-success mt-2" onClick={() => setFormParams((prevValue) => ({...prevValue, tolerance:simulatedTolerance}))}>
+                  Jump to Calculated Tolerance
+                </button>
+              ) :
+              (
+                ""
+              )
+
+            }
           </div>
           <div className="mb-3">
             <label htmlFor="monthsInput" className="form-label">Future Prediction Number of Months</label>
@@ -187,7 +225,17 @@ export default function Home() {
             <div id="monthsHelp" className="form-text">{formParams.months}</div>
           </div>
           <div className="d-flex align-items-center">
-            <button type="submit" className="btn btn-primary me-5">Submit</button>
+          {formParams.csv != undefined ? 
+              (
+                <button type="button" className="btn btn-warning" data-bs-toggle="modal" data-bs-target="#ToleranceModal" onClick={handleAutoTolerance}>
+                Auto Tolerance
+                </button>
+              ) :
+              (
+                ""
+              )
+            }
+            <button type="submit" className="btn btn-primary me-5 mx-4">Submit</button>
             {loading?
             <div className="spinner-border text-primary" role="status">
               <span className="visually-hidden">Loading...</span>
@@ -213,7 +261,7 @@ export default function Home() {
       <div className="row">
         <div className="col d-flex flex-column align-items-center px-5 gap-3 mb-5">
         <button type="button" className="btn btn-primary" onClick={downloadPredictedCSV}>Download CSV</button>
-        <button type="button" className="btn btn-warning" data-bs-toggle="modal" data-bs-target="#modal">
+        <button type="button" className="btn btn-warning" data-bs-toggle="modal" data-bs-target="#ComparisonModal">
               Comparison Tool
         </button>
         </div>
@@ -221,7 +269,11 @@ export default function Home() {
       : ""
       }
       
-      <Modal modalId="modal" predictedData={formattedFutureData ?? []}/>
+      <ComparisonModal modalId="ComparisonModal" predictedData={formattedFutureData ?? []}/>
+      <ToleranceModal modalId="ToleranceModal" historicalData={formattedHistoricalData ?? []} months={formParams.months} callback={(num) => {
+        setFormParams((prevValue) => ({...prevValue, tolerance:num}));
+        setSimulatedTolerance(num);
+      }} />
     </main>
   );
 }

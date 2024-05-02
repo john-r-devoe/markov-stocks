@@ -4,7 +4,7 @@ import { parseCsv } from "@/lib/CSV";
 import { FormEvent, useEffect, useState } from "react";
 import Alert from "./Alert";
 
-export default function Modal({modalId, predictedData}:{modalId:string, predictedData:Array<{date:string, value:number}>}){
+export default function ComparisonModal({modalId, predictedData}:{modalId:string, predictedData:Array<{date:string, value:number}>}){
     const [csv, setCsv] = useState<File|undefined>();
     const [formattedRealData, setFormattedRealData] = useState<Array<{date:string, value:number}>|undefined>(undefined);
     const [errorValues, setErrorValues] = useState<{count:number, total:number}>({count:0, total:0});
@@ -15,6 +15,7 @@ export default function Modal({modalId, predictedData}:{modalId:string, predicte
 
     const handleSubmit = async (e:FormEvent<HTMLFormElement>) => {
         e.preventDefault();
+        setLoading(true);
         try
         {
           let parsedFile:string|undefined = await csv?.text();
@@ -23,12 +24,13 @@ export default function Modal({modalId, predictedData}:{modalId:string, predicte
             throw realData;
           }
           setFormattedRealData(realData);
-          setLoading(true);
+          setLoading(false)
         }
         catch(error)
         {
             setAlert({show: true, type:"danger", strong:"Something went wrong uploading your file...", message:"Try again and make sure you are using nasdaq historical data CSV files!", onClose: () => setAlert(undefined)});
             console.error(error);
+            setLoading(false);
         }
     }
 

@@ -76,9 +76,9 @@ export function predict(data:Array<{date:string, value:number}>, tolerance:numbe
     countStates.forEach((e) => {
         markovChain[states.indexOf(e.from)][states.indexOf(e.to)] = e.weight ?? -1;
     });
-    console.log("states: " + states);
-    console.log("markov chain: ");
-    console.log(markovChain);
+    // console.log("states: " + states);
+    // console.log("markov chain: ");
+    // console.log(markovChain);
     //generate new data
     const predictedData:Array<{date:string, value:number}> = [];
     let currentDate = new Date(data[data.length-1].date);
